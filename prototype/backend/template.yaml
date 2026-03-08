@@ -1,0 +1,316 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ShelfIQ Prototype MVP - Serverless AI Commerce Intelligence
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        POWERTOOLS_SERVICE_NAME: shelfiq
+
+Resources:
+  # DynamoDB Tables
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: shelfiq-products
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: product_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: product_id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: ShelfIQ
+        - Key: Environment
+          Value: Prototype
+
+  RecommendationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: shelfiq-recommendations
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: product_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: product_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Project
+          Value: ShelfIQ
+        - Key: Environment
+          Value: Prototype
+
+  AnalysisCacheTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: shelfiq-analysis-cache
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: cache_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: cache_key
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Project
+          Value: ShelfIQ
+        - Key: Environment
+          Value: Prototype
+
+  # S3 Buckets
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub shelfiq-data-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Project
+          Value: ShelfIQ
+        - Key: Environment
+          Value: Prototype
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub shelfiq-frontend-${AWS::AccountId}
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Project
+          Value: ShelfIQ
+        - Key: Environment
+          Value: Prototype
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub '${FrontendBucket.Arn}/*'
+
+  # Lambda Functions
+  DataIngestionFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: DataBucket
+    Properties:
+      FunctionName: shelfiq-data-ingestion
+      CodeUri: functions/ingestion/
+      Handler: handler.lambda_handler
+      MemorySize: 512
+      Timeout: 300
+      Environment:
+        Variables:
+          PRODUCTS_TABLE: !Ref ProductsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+        - S3ReadPolicy:
+            BucketName: !Ref DataBucket
+
+  IntelligenceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: shelfiq-intelligence
+      CodeUri: functions/intelligence/
+      Handler: handler.lambda_handler
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          PRODUCTS_TABLE: !Ref ProductsTable
+          RECOMMENDATIONS_TABLE: !Ref RecommendationsTable
+          CACHE_TABLE: !Ref AnalysisCacheTable
+          BEDROCK_MODEL_ID: anthropic.claude-3-haiku-20240307-v1:0
+          BEDROCK_REGION: us-east-1
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RecommendationsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AnalysisCacheTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+
+  ApiHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: shelfiq-api-handler
+      CodeUri: functions/api/
+      Handler: handler.lambda_handler
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+        Variables:
+          PRODUCTS_TABLE: !Ref ProductsTable
+          RECOMMENDATIONS_TABLE: !Ref RecommendationsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ProductsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref RecommendationsTable
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IntelligenceFunction
+      Events:
+        GetProducts:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /products
+            Method: GET
+        GetProduct:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /products/{id}
+            Method: GET
+        GetRecommendations:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /recommendations/{product_id}
+            Method: GET
+        HealthCheck:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /health
+            Method: GET
+        PricingAnalysis:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /analyze/pricing/{product_id}
+            Method: POST
+        DemandAnalysis:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /analyze/demand/{product_id}
+            Method: POST
+        CompetitorAnalysis:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /analyze/competitors/{product_id}
+            Method: POST
+        Chat:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ShelfIQApi
+            Path: /chat
+            Method: POST
+
+  # API Gateway
+  ShelfIQApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: shelfiq-api
+      StageName: prod
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowMethods: "'GET,POST,OPTIONS'"
+      Auth:
+        ApiKeyRequired: false  # Set to true for production
+      TracingEnabled: true
+      Tags:
+        Project: ShelfIQ
+        Environment: Prototype
+
+  # CloudWatch Log Groups
+  DataIngestionLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: DataIngestionFunction
+    Properties:
+      LogGroupName: /aws/lambda/shelfiq-data-ingestion
+      RetentionInDays: 7
+
+  IntelligenceLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: IntelligenceFunction
+    Properties:
+      LogGroupName: /aws/lambda/shelfiq-intelligence
+      RetentionInDays: 7
+
+  ApiHandlerLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: ApiHandlerFunction
+    Properties:
+      LogGroupName: /aws/lambda/shelfiq-api-handler
+      RetentionInDays: 7
+
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub https://${ShelfIQApi}.execute-api.${AWS::Region}.amazonaws.com/prod
+    Export:
+      Name: ShelfIQApiEndpoint
+
+  DataBucket:
+    Description: S3 bucket for sample data
+    Value: !Ref DataBucket
+    Export:
+      Name: ShelfIQDataBucket
+
+  FrontendBucket:
+    Description: S3 bucket for frontend hosting
+    Value: !Ref FrontendBucket
+    Export:
+      Name: ShelfIQFrontendBucket
+
+  FrontendUrl:
+    Description: Frontend website URL
+    Value: !GetAtt FrontendBucket.WebsiteURL
+    Export:
+      Name: ShelfIQFrontendUrl
+
+  ProductsTable:
+    Description: DynamoDB products table
+    Value: !Ref ProductsTable
+    Export:
+      Name: ShelfIQProductsTable
+
+  RecommendationsTable:
+    Description: DynamoDB recommendations table
+    Value: !Ref RecommendationsTable
+    Export:
+      Name: ShelfIQRecommendationsTable

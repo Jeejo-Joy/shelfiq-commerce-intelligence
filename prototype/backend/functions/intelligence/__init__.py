@@ -1,0 +1,3 @@
+"""
+Intelligence Lambda Function
+"""
