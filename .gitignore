@@ -1,38 +1,110 @@
-# Dependencies
-node_modules/
-venv/
-env/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+prototype/backend/venv/
+
+# AWS SAM
+.aws-sam/
+prototype/backend/.aws-sam/
+prototype/backend/samconfig.toml
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+dist-ssr/
+*.local
+prototype/frontend/node_modules/
+prototype/frontend/dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+prototype/frontend/.env
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
+*~
 .DS_Store
-Thumbs.db
-
-# Environment variables
-.env
-.env.local
+.kiro/
 
 # Logs
-*.log
 logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
-# Build outputs
-dist/
-build/
-*.egg-info/
+# Testing
+coverage/
+*.cover
+.hypothesis/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Deployment
+deployment-outputs.json
+s3-bucket.txt
+prototype/backend/deployment-outputs.json
+prototype/backend/s3-bucket.txt
 
 # Temporary files
 *.tmp
+*.temp
 .cache/
 
-# Kiro internal (keep specs but ignore other internal files)
-.kiro/settings/
-.kiro/steering/
-.kiro/hooks/
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Archives
+archive/
+
+# Sensitive data
+aws-requirements.txt
+*.pem
+*.key
+credentials
+
+# Documentation drafts
+CURRENT_STATUS.md
+IMPLEMENTATION_SUMMARY.md
+
+# PDF files (keep only final presentation)
+*.pdf
+!ShelfIQ_OG404_AWS*.pdf

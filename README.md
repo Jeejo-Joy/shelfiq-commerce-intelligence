@@ -1,156 +1,302 @@
-# ShelfIQ — AI Commerce Intelligence Copilot
-**Built by Team OG404**
+# ShelfIQ - AI-Powered Commerce Intelligence
 
-ShelfIQ is an AI-powered commerce intelligence copilot that analyzes competitor pricing, demand signals, seller performance, and market trends to provide actionable recommendations for retailers and marketplace sellers.
+[![AWS](https://img.shields.io/badge/AWS-Bedrock-orange)](https://aws.amazon.com/bedrock/)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-It helps retail and e-commerce teams make smarter pricing, inventory, and growth decisions using real-time market intelligence and predictive analytics.
+> **Jeejo Joy** | AWS AI for Bharat Hackathon 2026
 
----
-
-## 🚀 Overview
-
-Retail and marketplace businesses constantly struggle with:
-
-- Rapid competitor price changes
-- Uncertain demand patterns
-- Margin pressure
-- Inefficient pricing decisions
-- Limited visibility into market trends
-- Seller performance optimization
-
-ShelfIQ acts as an **AI decision brain for retail operations**, continuously monitoring market signals and generating actionable recommendations.
-
----
+ShelfIQ is an AI-powered pricing intelligence platform designed for Indian e-commerce sellers. It leverages Amazon Bedrock to provide real-time competitor analysis and intelligent pricing recommendations.
 
 ## 🎯 Problem Statement
 
-Build an AI-powered commerce intelligence copilot that analyzes competitor pricing, demand signals, seller performance, and market trends to provide actionable pricing, inventory, and growth recommendations for retailers and marketplace sellers.
+Indian e-commerce sellers struggle with:
+- Manual competitor price tracking
+- Suboptimal pricing decisions
+- Lack of AI-powered insights
+- Time-consuming market analysis
+
+## 💡 Solution
+
+ShelfIQ provides:
+- **AI-Powered Pricing Recommendations** using Amazon Bedrock (Claude)
+- **Real-time Competitor Analysis** with market positioning
+- **Indian Market Focus** with INR pricing and local context
+- **Actionable Insights** for immediate business decisions
+
+## 🏗️ Architecture
+
+```
+┌─────────────┐
+│   React     │
+│  Frontend   │ ← S3 + CloudFront
+└──────┬──────┘
+       │
+       ↓
+┌─────────────┐
+│ API Gateway │
+└──────┬──────┘
+       │
+       ↓
+┌─────────────────────────────────┐
+│      Lambda Functions           │
+│  ┌──────────┬──────────────┐   │
+│  │   API    │ Intelligence │   │
+│  │ Handler  │   (Bedrock)  │   │
+│  └──────────┴──────────────┘   │
+└─────────────────────────────────┘
+       │              │
+       ↓              ↓
+┌─────────────┐  ┌──────────────┐
+│  DynamoDB   │  │   Bedrock    │
+│   Tables    │  │   (Claude)   │
+└─────────────┘  └──────────────┘
+```
+
+## 🚀 Features
+
+### 1. Product Dashboard
+- Browse 50+ products across categories
+- Real-time pricing in Indian Rupees (₹)
+- Sales rank and customer ratings
+
+### 2. AI Pricing Recommendations
+- Powered by Amazon Bedrock (Claude 3 Sonnet)
+- Confidence scores and detailed reasoning
+- Market position analysis
+
+### 3. Competitor Intelligence
+- Min/Median/Max competitor pricing
+- Price rank and percentile
+- Actionable recommendations
+
+### 4. Serverless Architecture
+- Fully serverless on AWS
+- Auto-scaling and cost-effective
+- Infrastructure as Code (AWS SAM)
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Amazon Bedrock** - AI/ML inference (Claude 3 Sonnet)
+- **AWS Lambda** - Serverless compute
+- **Amazon DynamoDB** - NoSQL database
+- **API Gateway** - REST API
+- **AWS SAM** - Infrastructure as Code
+
+### Frontend
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **Axios** - HTTP client
+
+### DevOps
+- **AWS SAM CLI** - Deployment
+- **GitHub Actions** - CI/CD (optional)
+- **CloudWatch** - Monitoring and logs
+
+## 📦 Project Structure
+
+```
+shelfiq-commerce-intelligence/
+├── prototype/
+│   ├── backend/
+│   │   ├── functions/
+│   │   │   ├── api/              # API handler Lambda
+│   │   │   ├── intelligence/     # Bedrock AI Lambda
+│   │   │   └── ingestion/        # Data ingestion Lambda
+│   │   ├── template.yaml         # SAM template
+│   │   └── samconfig.toml        # SAM configuration
+│   ├── frontend/
+│   │   ├── src/
+│   │   │   ├── App.tsx           # Main application
+│   │   │   ├── services/         # API client
+│   │   │   ├── types/            # TypeScript types
+│   │   │   └── utils/            # Utilities
+│   │   └── package.json
+│   ├── sample-data/
+│   │   └── products.csv          # Sample product data
+│   └── scripts/
+│       ├── deploy-frontend.sh    # Frontend deployment
+│       ├── generate_sample_data.py
+│       └── load_data_to_dynamodb.py
+├── docs/                         # Documentation
+├── DEMO_SCRIPT.md               # Demo presentation guide
+└── README.md
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- AWS Account with Bedrock access
+- AWS CLI configured
+- AWS SAM CLI installed
+- Node.js 18+ and npm
+- Python 3.11+
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Jeejo-Joy/shelfiq-commerce-intelligence.git
+cd shelfiq-commerce-intelligence
+```
+
+### 2. Deploy Backend
+
+```bash
+cd prototype/backend
+
+# Build and deploy
+sam build
+sam deploy --guided
+
+# Note the API endpoint from outputs
+```
+
+### 3. Load Sample Data
+
+```bash
+cd prototype/scripts
+
+# Generate sample data
+python3 generate_sample_data.py
+
+# Load to DynamoDB
+python3 load_data_to_dynamodb.py
+```
+
+### 4. Deploy Frontend
+
+```bash
+cd prototype/frontend
+
+# Install dependencies
+npm install
+
+# Update .env with API endpoint
+echo "VITE_API_ENDPOINT=<your-api-endpoint>" > .env
+
+# Build and deploy
+npm run build
+
+# Deploy to S3 (automated)
+cd ../scripts
+./deploy-frontend.sh
+```
+
+### 5. Access Application
+
+Open the Frontend URL from CloudFormation outputs:
+```
+http://shelfiq-frontend-<account-id>.s3-website-us-east-1.amazonaws.com
+```
+
+## 🔑 Environment Variables
+
+### Backend (Lambda)
+- `BEDROCK_MODEL_ID` - Claude model ID
+- `BEDROCK_REGION` - AWS region for Bedrock
+- `PRODUCTS_TABLE` - DynamoDB products table
+- `RECOMMENDATIONS_TABLE` - DynamoDB recommendations table
+- `CACHE_TABLE` - DynamoDB cache table
+
+### Frontend
+- `VITE_API_ENDPOINT` - API Gateway endpoint URL
+
+## 📊 Sample Data
+
+The platform includes 50 sample products with:
+- Realistic Indian market prices (₹149 - ₹3,113)
+- Multiple categories (Electronics, Sports, Books, Toys, Home & Kitchen)
+- Competitor pricing data (3-7 competitors per product)
+- Sales metrics and customer ratings
+
+## 🎥 Demo
+
+Watch our 2-minute demo: [YouTube Link]
+
+Or follow the [DEMO_SCRIPT.md](DEMO_SCRIPT.md) to create your own demo.
+
+## 🧪 Testing
+
+### Test API Endpoints
+
+```bash
+# Health check
+curl https://<api-endpoint>/prod/health
+
+# Get products
+curl https://<api-endpoint>/prod/products
+
+# Get pricing analysis
+curl -X POST https://<api-endpoint>/prod/analyze/pricing/PROD-001
+```
+
+### Test Bedrock Integration
+
+```bash
+# Check Lambda logs
+aws logs tail /aws/lambda/shelfiq-intelligence --follow
+```
+
+## 📈 AWS Services Used
+
+| Service | Purpose | Cost Estimate |
+|---------|---------|---------------|
+| Amazon Bedrock | AI inference | ~$0.003/1K tokens |
+| AWS Lambda | Compute | Free tier eligible |
+| DynamoDB | Database | Free tier eligible |
+| API Gateway | REST API | Free tier eligible |
+| S3 | Frontend hosting | ~$0.023/GB |
+| CloudWatch | Monitoring | Free tier eligible |
+
+**Estimated Monthly Cost:** < $5 for prototype usage
+
+## 🔒 Security
+
+- API Gateway with CORS enabled
+- DynamoDB encryption at rest
+- Lambda IAM roles with least privilege
+- No hardcoded credentials
+- Environment variables for configuration
+
+## 🚧 Future Enhancements
+
+- [ ] User authentication (Cognito)
+- [ ] Historical price tracking
+- [ ] Email alerts for price changes
+- [ ] Multi-marketplace support (Amazon, Flipkart)
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics dashboard
+- [ ] Bulk product import
+- [ ] API rate limiting
+
+## 👨‍💻 Developer
+
+**Jeejo Joy** - Full Stack Development & AWS Architecture
+
+Solo developer submission for AWS AI for Bharat Hackathon 2026
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- AWS AI for Bharat Hackathon
+- Amazon Bedrock team
+- AWS Serverless team
+- Open source community
+
+## 📞 Contact
+
+- GitHub: [@Jeejo-Joy](https://github.com/Jeejo-Joy)
+- Project Link: [https://github.com/Jeejo-Joy/shelfiq-commerce-intelligence](https://github.com/Jeejo-Joy/shelfiq-commerce-intelligence)
 
 ---
 
-## 💡 Solution — ShelfIQ
+**Built with ❤️ for Indian E-commerce Sellers**
 
-ShelfIQ ingests multi-source commerce data and applies AI models to generate decision intelligence across pricing, demand, and seller growth.
-
-### Core Capabilities
-
-- 📊 Competitor price monitoring
-- 📈 Demand forecasting
-- 💰 Pricing optimization recommendations
-- 🛒 Seller performance insights
-- 🧠 Market trend intelligence
-- ⚠️ Margin risk alerts
-- 🚀 Growth opportunity suggestions
-
----
-
-## 🧩 How It Works
-
-ShelfIQ continuously analyzes:
-
-- Marketplace listings and prices
-- Seller sales performance
-- Promotions and discounts
-- Reviews sentiment
-- Market demand signals
-
-AI models transform these signals into:
-
-- Price recommendations
-- Demand forecasts
-- Competitor alerts
-- Listing optimization suggestions
-- Inventory guidance
-- Growth actions
-
----
-
-## 🏗️ System Architecture
-
-ShelfIQ architecture consists of:
-
-**Data Sources**
-- Marketplace price and listing data
-- Seller sales data
-- Promotions
-- Reviews and sentiment signals
-- External market signals
-
-**Core Intelligence Layer**
-- Data ingestion pipeline
-- Feature store
-- Demand forecasting model
-- Pricing optimization engine
-- Recommendation engine
-- Alerting engine
-
-**Application Layer**
-- Copilot API
-- Dashboard interface
-- Decision alerts
-
-Detailed design available in `design.md`.
-
----
-
-## 👥 Target Users
-
-- Retail category managers
-- Pricing and revenue teams
-- Marketplace sellers
-- E-commerce operators
-- D2C brands
-- Retail analysts
-
----
-
-## 💼 Business Value
-
-ShelfIQ enables:
-
-- Revenue uplift through optimal pricing
-- Margin protection via risk alerts
-- Better demand planning
-- Competitive positioning
-- Seller growth acceleration
-- Faster decision-making
-
----
-
-## 📂 Repository Contents
-
-- `requirements.md` — Product requirements
-- `design.md` — System architecture and design
-- `README.md` — Project overview
-
----
-
-## 🧪 Hackathon Context
-
-This project was created for the **AI for Retail, Commerce & Market Intelligence** track.
-
-ShelfIQ demonstrates how AI can enhance decision-making, efficiency, and growth across retail and marketplace ecosystems.
-
----
-
-## ⚠️ Disclaimer
-
-This repository contains a hackathon concept prototype.
-
-No proprietary, confidential, or real commercial data is included.
-All examples and scenarios are illustrative.
-
----
-
-## 👨‍💻 Team
-
-**Team Name:** OG404
-**Team Leader:** Jeejo Joy
-
----
-
-## 🌍 Vision
-
-ShelfIQ aims to become the intelligence layer powering pricing, demand, and growth decisions across global commerce platforms.
-
----
+*Empowering sellers with AI-driven pricing intelligence*
